@@ -14,11 +14,12 @@
 
 * Open the Debug Console ( Tools – Debug Console ) and type ***createmasternodekey***.
 You will then receive your private key, save it in a txt to use it later.
- 
+  ```
  Example:
- ```      createmasternodekey    ```
+      createmasternodekey    
+      
  Output should be: 
-          6yvU9ECYz1SmW3yLhRxwEqA1eHN2s2bUQZZ4vLr1XsGj8s3bHYG  
+          6yvU9ECYz1SmW3yLhRxwEqA1eHN2s2bUQZZ4vLr1XsGj8s3bHYG   ```
 * Still at Debug Console type ***getmasternodeoutputs*** and save txhash and outputidx on a txt
   ```
   Example:
