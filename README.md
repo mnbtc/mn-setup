@@ -2,7 +2,7 @@
 # mnbtc Masternode Setup Guide
 ***
 ## Required
-1) **mnbtc collateral value at current block** ([consult the collateral table](../../README.md#rewards-breakdown))
+1) **mnbtc collatera: 2000 MNBTC
 2) **Local Wallet https://github.com/mnbtc/mnbtc/releases**
 3) **VPS with UBUNTU 18.04** (it is possible to work on other versions but it is not tested)
 4) **Putty https://www.putty.org/**
