@@ -30,15 +30,20 @@ You will then receive your private key, save it in a txt to use it later.
 
 ***On Putty***
 
-* Once logged in your vps, *copy/paste* each line one by one with *Enter*
+1. * Once logged in your vps, *copy/paste* each line one by one with *Enter*
 
 ```
-wget https://github.com/mnbtc/mn-setup/blob/main/masternodesetup.sh
+wget https://raw.githubusercontent.com/mnbtc/mn-setup/master/masternodesetup.sh
 ```
+2. With this command you will make masternode-install.sh executable:  
 
-```
-bash masternodesetup.sh
-```
+- Use this: <br>
+```sudo chmod +x masternodesetup.sh``` <br>
+
+3. Now install your masternode.  
+```./masternodesetup.sh```
+
+
 
 * Let this run, and when it ask you to install dependencies, if you're not sure press ***y*** and then enter
 
