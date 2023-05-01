@@ -5,12 +5,21 @@ CONFIG_FILE='mnbtc.conf'
 CONFIGFOLDER='/root/.mnbtc'
 COIN_DAEMON='mnbtcd'
 COIN_CLI='mnbtc-cli'
+COIN_TX='mnbtc-tx'
 COIN_PATH='/usr/local/bin/'
-COIN_TGZ=`https://github.com/mnbtc/mnbtc/releases/download/1.0.0.0/MNBTC-Linux-1000.zip`
-COIN_ZIP=$(echo $COIN_TGZ | awk -F'/' '{print $NF}')
+OS_VERSION=$(lsb_release -d)
+COIN_TGZP='https://github.com/mnbtc/mnbtc/releases/download/1.0.0.0/MNBTC-Linux-1000.zip'
+COIN_BOOTSTRAP='https://github.com/mnbtc/mnbtc/releases/download/1.0.0.0/bootstrap.zip'
+COIN_BOOTSTRAP_NAME=$(echo $COIN_BOOTSTRAP | awk -F'/' '{print $NF}')
+COIN_TGZ=$(echo $COIN_TGZP | awk -F'/' '{print $NF}')
 COIN_NAME='mnbtc'
+COIN_NAME_OLD='mnbtcd'
+PROJECT_NAME='MASTERNODEBTC (MNBTC)'
+COIN_EXPLORER='http://38.242.145.127/'
 COIN_PORT=15224
 RPC_PORT=15223
+
+NODEIP=$(curl -s4 icanhazip.com)
 
 BLUE="\033[0;34m"
 YELLOW="\033[0;33m"
@@ -21,40 +30,79 @@ GREEN="\033[0;32m"
 NC='\033[0m'
 MAG='\e[1;35m'
 
-NODEIP=$(curl --fail --retry 3 -s4 icanhazip.com)
-if [[ -z "$NODEIP" ]]; then
-  #if we get here, then most likely icanhazip.com is timing out
-  echo -e "${RED}Failed to determine IP address. Please wait a couple minutes and rerun script. If this continues, ask for assistance in discord.${NC}"
-  exit 1
-fi;
+LICON=$'#'
 
 purgeOldInstallation() {
-    echo -e "${GREEN}Searching and removing old $COIN_NAME files and configurations${NC}"
+    echo -e "${YELLOW}Searching and removing old ${RED}$PROJECT_NAME ${GREEN}Masternode ${YELLOW}files and configurations${NC}"
+	#stopping service
+	systemctl stop $COIN_NAME.service  > /dev/null 2>&1 &
+	systemctl stop $COIN_NAME_OLD.service  > /dev/null 2>&1 &
+	echo -ne "${RED}${LICON}${LICON}${LICON} ${GREEN}(10%)${NC}\r"
+	sleep 1
+	echo -ne "${RED}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON} ${GREEN}(20%)${NC}\r"
+	sleep 1
+	echo -ne "${RED}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON} ${GREEN}(30%)${NC}\r"
+	sleep 1
+	echo -ne "${RED}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON} ${GREEN}(40%)${NC}\r"
+	sleep 1
+	echo -ne "${RED}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON} ${GREEN}(50%)${NC}\r"
+	sleep 1
+	echo -ne "${RED}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON} ${GREEN}(60%)${NC}\r"
+	sleep 1
+	echo -ne "${RED}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON} ${GREEN}(70%)${NC}\r"
+	sleep 1
+	echo -ne "${RED}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON} ${GREEN}(80%)${NC}\r"
+	sleep 1
+	echo -ne "${RED}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON} ${GREEN}(90%)${NC}\r"
+	sleep 1
+	echo -ne "${RED}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON} ${GREEN}(100%)${NC}\r"
+	sleep 1
+	echo -ne '\n'
+	# sleep 10
     #kill wallet daemon
-    systemctl stop $COIN_NAME.service > /dev/null 2>&1
-    sudo killall $COIN_DAEMON > /dev/null 2>&1
+	killall $COIN_DAEMON > /dev/null 2>&1
     #remove old ufw port allow
-    sudo ufw delete allow $COIN_PORT/tcp > /dev/null 2>&1
+    ufw delete allow $COIN_PORT/tcp > /dev/null 2>&1
     #remove old files
-	rm /root/$CONFIGFOLDER/bootstrap.dat.old > /dev/null 2>&1
-	cd /usr/local/bin && sudo rm $COIN_CLI $COIN_DAEMON > /dev/null 2>&1 && cd
-    cd /usr/bin && sudo rm $COIN_CLI $COIN_DAEMON > /dev/null 2>&1 && cd
-        sudo rm -rf ~/$CONFIGFOLDER > /dev/null 2>&1
+    rm $COIN_CLI $COIN_DAEMON > /dev/null 2>&1
+    rm -rf ~/.$COIN_NAME > /dev/null 2>&1
     #remove binaries and $COIN_NAME utilities
     cd /usr/local/bin && sudo rm $COIN_CLI $COIN_DAEMON > /dev/null 2>&1 && cd
     echo -e "${GREEN}* Done${NONE}";
 }
 
-
+function install_sentinel() {
+  echo -e "${GREEN}Installing sentinel.${NC}"
+  apt-get -y install python-virtualenv virtualenv >/dev/null 2>&1
+  git clone $SENTINEL_REPO $CONFIGFOLDER/sentinel >/dev/null 2>&1
+  cd $CONFIGFOLDER/sentinel
+  virtualenv ./venv >/dev/null 2>&1
+  ./venv/bin/pip install -r requirements.txt >/dev/null 2>&1
+  echo  "* * * * * cd $CONFIGFOLDER/sentinel && ./venv/bin/python bin/sentinel.py >> $CONFIGFOLDER/sentinel.log 2>&1" > $CONFIGFOLDER/$COIN_NAME.cron
+  crontab $CONFIGFOLDER/$COIN_NAME.cron
+  rm $CONFIGFOLDER/$COIN_NAME.cron >/dev/null 2>&1
+}
 
 function download_node() {
-  echo -e "${GREEN}Downloading and Installing VPS $COIN_NAME Daemon${NC}"
+  echo -e "${GREEN}Downloading and Installing VPS ${RED}$PROJECT_NAME ${GREEN}Daemon${NC}"
   cd $TMP_FOLDER >/dev/null 2>&1
-  wget -q $COIN_TGZ
-  unzip $COIN_ZIP
-  cd rev >/dev/null 2>&1
-  chmod +x $COIN_DAEMON $COIN_CLI
-  cp $COIN_DAEMON $COIN_CLI $COIN_PATH
+  wget -q $COIN_TGZP
+  #compile_error
+  unzip $COIN_TGZ >/dev/null 2>&1
+  rm -r $COIN_TGZ >/dev/null 2>&1
+
+  #compile_error
+  chmod +x $COIN_DAEMON >/dev/null 2>&1
+  chmod +x $COIN_CLI >/dev/null 2>&1
+  chmod +x $COIN_DAEMON >/dev/null 2>&1
+  chmod +x $COIN_CLI >/dev/null 2>&1
+  chmod +x $COIN_TX >/dev/null 2>&1
+  cp $COIN_DAEMON $COIN_PATH >/dev/null 2>&1
+  cp $COIN_DAEMON /root/ >/dev/null 2>&1
+  cp $COIN_CLI $COIN_PATH >/dev/null 2>&1
+  cp $COIN_CLI /root/ >/dev/null 2>&1
+  cp $COIN_TX $COIN_PATH >/dev/null 2>&1
+  cp $COIN_TX /root/ >/dev/null 2>&1
   cd ~ >/dev/null 2>&1
   rm -rf $TMP_FOLDER >/dev/null 2>&1
   clear
@@ -65,32 +113,40 @@ function configure_systemd() {
 [Unit]
 Description=$COIN_NAME service
 After=network.target
-
 [Service]
 User=root
 Group=root
-
 Type=forking
 #PIDFile=$CONFIGFOLDER/$COIN_NAME.pid
-
 ExecStart=$COIN_PATH$COIN_DAEMON -daemon -conf=$CONFIGFOLDER/$CONFIG_FILE -datadir=$CONFIGFOLDER
 ExecStop=-$COIN_PATH$COIN_CLI -conf=$CONFIGFOLDER/$CONFIG_FILE -datadir=$CONFIGFOLDER stop
-
 Restart=always
 PrivateTmp=true
 TimeoutStopSec=60s
 TimeoutStartSec=10s
 StartLimitInterval=120s
 StartLimitBurst=5
-
 [Install]
 WantedBy=multi-user.target
 EOF
 
-  systemctl daemon-reload
-  sleep 3
+	echo -e "\n${GREEN}Reloading Service Daemon${NC}\n"
+  	systemctl daemon-reload
+	echo -ne "${RED}${LICON}${LICON}${LICON}## ${GREEN}(33%)${NC}\r"
+	sleep 1
+	echo -ne "${RED}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}# ${GREEN}(66%)${NC}\r"
+	sleep 1
+	echo -ne "${RED}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}## ${GREEN}(100%)${NC}\r"
+	sleep 1
+	echo -ne '\n'
+    echo -e "${GREEN}* Done${NONE}";
+#   sleep 3
   systemctl start $COIN_NAME.service
   systemctl enable $COIN_NAME.service >/dev/null 2>&1
+  echo -e "\n${BLUE}$PROJECT_NAME ${GREEN}Service Status\n${NC}"
+  systemctl status $COIN_NAME.service
+  echo -e "\n${BLUE}=======================================================================================================${NC}\n"
+
 
   if [[ -z "$(ps axo cmd:100 | egrep $COIN_DAEMON)" ]]; then
     echo -e "${RED}$COIN_NAME is not running${NC}, please investigate. You should start by running the following commands as root:"
@@ -103,7 +159,13 @@ EOF
 
 
 function create_config() {
+  echo -e "${YELLOW}Downloading and extracting bootstrap${NC}"
   mkdir $CONFIGFOLDER >/dev/null 2>&1
+  cd $CONFIGFOLDER >/dev/null 2>&1
+  wget $COIN_BOOTSTRAP >/dev/null 2>&1
+  unzip $COIN_BOOTSTRAP_NAME >/dev/null 2>&1
+  rm -r $COIN_BOOTSTRAP_NAME >/dev/null 2>&1
+  cd ~
   RPCUSER=$(tr -cd '[:alnum:]' < /dev/urandom | fold -w10 | head -n1)
   RPCPASSWORD=$(tr -cd '[:alnum:]' < /dev/urandom | fold -w22 | head -n1)
   cat << EOF > $CONFIGFOLDER/$CONFIG_FILE
@@ -111,28 +173,74 @@ rpcuser=$RPCUSER
 rpcpassword=$RPCPASSWORD
 rpcport=$RPC_PORT
 rpcallowip=127.0.0.1
+port=$COIN_PORT
 listen=1
 server=1
 daemon=1
-port=$COIN_PORT
+txindex=1
+staking=1
 EOF
 }
 
 function create_key() {
-  echo -e "${YELLOW}Enter your ${RED}$COIN_NAME Masternode GEN Key${NC}."
+  echo -e "${YELLOW}Enter your ${BLUE}$PROJECT_NAME ${GREEN}Masternode Private Key${YELLOW} produced on your local wallet by ${RED}createmasternodekey${YELLOW} command or press enter for a ${GREEN}Masternode Private Key${YELLOW} is generated automatically${NC}"
   read -e COINKEY
   if [[ -z "$COINKEY" ]]; then
   $COIN_PATH$COIN_DAEMON -daemon
-  sleep 30
+	echo -ne "${RED}${LICON}${LICON}${LICON} ${GREEN}(10%)${NC}\r"
+	sleep 3
+	echo -ne "${RED}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON} ${GREEN}(20%)${NC}\r"
+	sleep 3
+	echo -ne "${RED}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON} ${GREEN}(30%)${NC}\r"
+	sleep 3
+	echo -ne "${RED}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON} ${GREEN}(40%)${NC}\r"
+	sleep 3
+	echo -ne "${RED}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON} ${GREEN}(50%)${NC}\r"
+	sleep 3
+	echo -ne "${RED}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON} ${GREEN}(60%)${NC}\r"
+	sleep 3
+	echo -ne "${RED}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON} ${GREEN}(70%)${NC}\r"
+	sleep 3
+	echo -ne "${RED}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON} ${GREEN}(80%)${NC}\r"
+	sleep 3
+	echo -ne "${RED}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON} ${GREEN}(90%)${NC}\r"
+	sleep 3
+	echo -ne "${RED}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON} ${GREEN}(100%)${NC}\r"
+	sleep 3
+	echo -ne '\n'
+    echo -e "${GREEN}* Done${NONE}";
+    # sleep 30
   if [ -z "$(ps axo cmd:100 | grep $COIN_DAEMON)" ]; then
-   echo -e "${RED}$COIN_NAME server couldn not start. Check /var/log/syslog for errors.{$NC}"
+   echo -e "${RED}$COIN_NAME server couldn not start. Check /var/log/syslog for errors.${$NC}"
    exit 1
   fi
   COINKEY=$($COIN_PATH$COIN_CLI createmasternodekey)
   if [ "$?" -gt "0" ];
     then
-    echo -e "${RED}Wallet not fully loaded. Please wait 30 seconds and I will try again to generate a key. Do not press any buttons.${NC}"
-    sleep 30
+    echo -e "${RED}Wallet not fully loaded. Let us wait and try again to generate the ${GREEN}Masternode Private Key${NC}"
+	echo -ne "${RED}${LICON}${LICON}${LICON} ${GREEN}(10%)${NC}\r"
+	sleep 3
+	echo -ne "${RED}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON} ${GREEN}(20%)${NC}\r"
+	sleep 3
+	echo -ne "${RED}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON} ${GREEN}(30%)${NC}\r"
+	sleep 3
+	echo -ne "${RED}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON} ${GREEN}(40%)${NC}\r"
+	sleep 3
+	echo -ne "${RED}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON} ${GREEN}(50%)${NC}\r"
+	sleep 3
+	echo -ne "${RED}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON} ${GREEN}(60%)${NC}\r"
+	sleep 3
+	echo -ne "${RED}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON} ${GREEN}(70%)${NC}\r"
+	sleep 3
+	echo -ne "${RED}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON} ${GREEN}(80%)${NC}\r"
+	sleep 3
+	echo -ne "${RED}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON} ${GREEN}(90%)${NC}\r"
+	sleep 3
+	echo -ne "${RED}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON}${LICON} ${GREEN}(100%)${NC}\r"
+	sleep 3
+	echo -ne '\n'
+    echo -e "${GREEN}* Done${NONE}";
+#   sleep 30
     COINKEY=$($COIN_PATH$COIN_CLI createmasternodekey)
   fi
   $COIN_PATH$COIN_CLI stop
@@ -146,12 +254,8 @@ function update_config() {
 maxconnections=256
 bind=$NODEIP
 masternode=1
-externalip=$NODEIP:$COIN_PORT
+masternodeaddr=$NODEIP:$COIN_PORT
 masternodeprivkey=$COINKEY
-
-
-
-
 EOF
 }
 
@@ -170,7 +274,7 @@ function get_ip() {
   declare -a NODE_IPS
   for ips in $(netstat -i | awk '!/Kernel|Iface|lo/ {print $1," "}')
   do
-    NODE_IPS+=($(curl --retry 3 --interface $ips --connect-timeout 2 -s4 icanhazip.com))
+    NODE_IPS+=($(curl --interface $ips --connect-timeout 2 -s4 icanhazip.com))
   done
 
   if [ ${#NODE_IPS[@]} -gt 1 ]
@@ -187,12 +291,6 @@ function get_ip() {
   else
     NODEIP=${NODE_IPS[0]}
   fi
-  
-  if [[ -z "$NODEIP" ]]; then
-      #Couldn't determine IP, most likely icanhazip.com is timed out
-      echo -e "${RED}Failed to determine IP address. Please wait a couple minutes and rerun script. If this continues, ask for assistance in discord.${NC}"
-      exit 1
-  fi;
 }
 
 
@@ -206,7 +304,10 @@ fi
 
 
 function checks() {
-
+# if [[ $(lsb_release -d) != *16.04* ]]; then
+#   echo -e "${RED}You are not running Ubuntu 18.04. Installation is cancelled.${NC}"
+#   exit 1
+# fi
 
 if [[ $EUID -ne 0 ]]; then
    echo -e "${RED}$0 must be run as root.${NC}"
@@ -214,13 +315,18 @@ if [[ $EUID -ne 0 ]]; then
 fi
 
 if [ -n "$(pidof $COIN_DAEMON)" ] || [ -e "$COIN_DAEMOM" ] ; then
-  echo -e "${RED}$COIN_NAME is already installed.${NC}"
+  echo -e "${RED}$COIN_NAME is already installed.${NC} Please Run again.."
   exit 1
 fi
 }
 
 function prepare_system() {
-echo -e "Preparing the VPS to setup. ${CYAN}$COIN_NAME${NC} ${RED}Masternode${NC}"
+echo -e "${YELLOW}Preparing the VPS to setup ${BLUE}$PROJECT_NAME ${GREEN}Masternode${NC}"
+
+rm /var/lib/apt/lists/lock > /dev/null 2>&1
+rm /var/cache/apt/archives/lock > /dev/null 2>&1
+rm /var/lib/dpkg/lock > /dev/null 2>&1
+
 apt-get update >/dev/null 2>&1
 DEBIAN_FRONTEND=noninteractive apt-get update > /dev/null 2>&1
 DEBIAN_FRONTEND=noninteractive apt-get -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" -y -qq upgrade >/dev/null 2>&1
@@ -229,38 +335,122 @@ echo -e "${PURPLE}Adding bitcoin PPA repository"
 apt-add-repository -y ppa:bitcoin/bitcoin >/dev/null 2>&1
 echo -e "Installing required packages, it may take some time to finish.${NC}"
 apt-get update >/dev/null 2>&1
-apt-get install libzmq3-dev net-tools -y >/dev/null 2>&1
+apt-get install libzmq3-dev -y >/dev/null 2>&1
 apt-get install -y -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" make software-properties-common \
-build-essential libtool autoconf libssl-dev \
-sudo automake git wget curl bsdmainutils net-tools \
-libminiupnpc-dev libgmp3-dev ufw pkg-config unzip >/dev/null 2>&1
-if [ "$?" -gt "0" ];
-  then
-    echo -e "${RED}Not all required packages were installed properly. Try to install them manually by running the following commands:${NC}\n"
-    echo "apt-get update"
-    echo "apt -y install software-properties-common"
-    echo "apt-add-repository -y ppa:bitcoin/bitcoin"
-    echo "apt-get update"
-    echo "apt install -y make software-properties-common build-essential libtool autoconf libssl-dev sudo automake git wget curl bsdmainutils net-tools libminiupnpc-dev libgmp3-dev ufw pkg-config unzip"
- exit 1
-fi
+build-essential libtool autoconf libssl-dev libboost-dev libboost-chrono-dev libboost-filesystem-dev libboost-program-options-dev \
+libboost-system-dev libboost-test-dev libboost-thread-dev sudo automake git wget curl libdb4.8-dev bsdmainutils libdb4.8++-dev \
+libminiupnpc-dev libgmp3-dev ufw pkg-config libevent-dev  libdb5.3++ libstdc++6 unzip libzmq5 >/dev/null 2>&1
+
+# if [[ $(lsb_release -d) == *16.04* ]]; then
+# 	add-apt-repository -y ppa:ubuntu-toolchain-r/test >/dev/null 2>&1
+# 	apt-get update >/dev/null 2>&1
+# 	apt-get -y upgrade >/dev/null 2>&1
+# 	apt-get -y dist-upgrade >/dev/null 2>&1
+# 	sudo ln -s /usr/lib/x86_64-linux-gnu/libboost_atomic.so.1.58.0 /usr/lib/x86_64-linux-gnu/libboost_atomic.so.1.65.1
+# 	sudo ln -s /usr/lib/x86_64-linux-gnu/libboost_chrono.so.1.58.0 /usr/lib/x86_64-linux-gnu/libboost_chrono.so.1.65.1
+# 	sudo ln -s /usr/lib/x86_64-linux-gnu/libboost_date_time.so.1.58.0 /usr/lib/x86_64-linux-gnu/libboost_date_time.so.1.65.1
+# 	sudo ln -s /usr/lib/x86_64-linux-gnu/libboost_filesystem.so.1.58.0 /usr/lib/x86_64-linux-gnu/libboost_filesystem.so.1.65.1
+# 	sudo ln -s /usr/lib/x86_64-linux-gnu/libboost_iostreams.so.1.58.0 /usr/lib/x86_64-linux-gnu/libboost_iostreams.so.1.65.1
+# 	sudo ln -s /usr/lib/x86_64-linux-gnu/libboost_prg_exec_monitor.so.1.58.0 /usr/lib/x86_64-linux-gnu/libboost_prg_exec_monitor.so.1.65.1
+# 	sudo ln -s /usr/lib/x86_64-linux-gnu/libboost_program_options.so.1.58.0 /usr/lib/x86_64-linux-gnu/libboost_program_options.so.1.65.1
+# 	sudo ln -s /usr/lib/x86_64-linux-gnu/libboost_serialization.so.1.58.0 /usr/lib/x86_64-linux-gnu/libboost_serialization.so.1.65.1
+# 	sudo ln -s /usr/lib/x86_64-linux-gnu/libboost_system.so.1.58.0 /usr/lib/x86_64-linux-gnu/libboost_system.so.1.65.1
+# 	sudo ln -s /usr/lib/x86_64-linux-gnu/libboost_thread.so.1.58.0 /usr/lib/x86_64-linux-gnu/libboost_thread.so.1.65.1
+# 	sudo ln -s /usr/lib/x86_64-linux-gnu/libboost_unit_test_framework.so.1.58.0 /usr/lib/x86_64-linux-gnu/libboost_unit_test_framework.so.1.65.1
+# 	sudo ln -s /usr/lib/x86_64-linux-gnu/libboost_wserialization.so.1.58.0 /usr/lib/x86_64-linux-gnu/libboost_wserialization.so.1.65.1
+
+# 	# libevent_* version fixes
+# 	sudo ln -s /usr/lib/x86_64-linux-gnu/libevent-2.0.so.5.1.9 /usr/lib/x86_64-linux-gnu/libevent-2.1.so.6
+# 	sudo ln -s /usr/lib/x86_64-linux-gnu/libevent_core-2.0.so.5.1.9 /usr/lib/x86_64-linux-gnu/libevent_core-2.1.so.6
+# 	sudo ln -s /usr/lib/x86_64-linux-gnu/libevent_extra-2.0.so.5.1.9 /usr/lib/x86_64-linux-gnu/libevent_extra-2.1.so.6
+# 	sudo ln -s /usr/lib/x86_64-linux-gnu/libevent_openssl-2.0.so.5.1.9 /usr/lib/x86_64-linux-gnu/libevent_openssl-2.1.so.6
+# 	sudo ln -s /usr/lib/x86_64-linux-gnu/libevent_pthreads-2.0.so.5.1.9 /usr/lib/x86_64-linux-gnu/libevent_pthreads-2.1.so.6
+# fi
+
+# if [ "$?" -gt "0" ];
+#   then
+#     echo -e "${RED}Not all required packages were installed properly. Try to install them manually by running the following commands:${NC}\n"
+#     echo "apt-get update"
+#     echo "apt -y install software-properties-common"
+#     echo "apt-add-repository -y ppa:bitcoin/bitcoin"
+#     echo "apt-get update"
+#     echo "apt install -y make build-essential libtool software-properties-common autoconf libssl-dev libboost-dev libboost-chrono-dev libboost-filesystem-dev \
+# libboost-program-options-dev libboost-system-dev libboost-test-dev libboost-thread-dev sudo automake git curl libdb4.8-dev \
+# bsdmainutils libdb4.8++-dev libminiupnpc-dev libgmp3-dev ufw pkg-config libevent-dev libdb5.3++ unzip libzmq5"
+#  exit 1
+# fi
 clear
+}
+
+function set_scripts_and_aliases() {
+cat << EOF > /root/mnbtc-general-info
+echo -e "\n\n${BLUE}=======================================================================================================${NC}\n"
+echo -e "${GREEN}$PROJECT_NAME General Info: ${NC}"
+$COIN_CLI getinfo
+echo -e "\n${BLUE}=======================================================================================================${NC}\n"
+EOF
+chmod +x /root/mnbtc-general-info
+
+cat << EOF > /root/mnbtc-fee-info
+echo -e "\n\n${BLUE}=======================================================================================================${NC}\n"
+echo -e "${GREEN}$PROJECT_NAME Fee Info: ${NC}"
+$COIN_CLI getfeeinfo 100
+echo -e "\n${BLUE}=======================================================================================================${NC}\n"
+EOF
+chmod +x /root/mnbtc-fee-info
+
+cat << EOF > /root/mnbtc-networkinfo
+echo -e "\n\n${BLUE}=======================================================================================================${NC}\n"
+echo -e "${GREEN}$PROJECT_NAME Network Info: ${NC}"
+$COIN_CLI getnetworkinfo
+echo -e "\n${BLUE}=======================================================================================================${NC}\n"
+EOF
+chmod +x /root/mnbtc-networkinfo
+
+cat << EOF > /root/mnbtc-masternode-stats
+echo -e "\n\n${BLUE}=======================================================================================================${NC}\n"
+echo -e "${GREEN}Last Block: ${NC}"
+$COIN_CLI getblockcount
+echo -e "\n${GREEN}Masternode Sync Status: ${NC}"
+$COIN_CLI mnsync status
+echo -e "\n${GREEN}Masternode Status: ${NC}"
+$COIN_CLI getmasternodestatus
+echo -e "\n${BLUE}=======================================================================================================${NC}\n"
+EOF
+chmod +x /root/mnbtc-masternode-stats
+
+cp /root/.bashrc /root/.bashrc.backup
+sed '/feestats/d' /root/.bashrc | sed '/networkstats/d' | sed '/mnstats/d' | sed '/mnbtcinfo/d' > /root/tmp
+mv /root/tmp /root/.bashrc
+echo -e "alias mnbtcinfo='/root/mnbtc-general-info'" >> /root/.bashrc
+echo -e "alias feestats='/root/mnbtc-fee-info'" >> /root/.bashrc
+echo -e "alias networkstats='/root/mnbtc-networkinfo'" >> /root/.bashrc
+echo -e "alias mnstats='/root/mnbtc-masternode-stats'" >> /root/.bashrc
+exec bash
 }
 
 function important_information() {
  echo
  echo -e "${BLUE}================================================================================================================================${NC}"
- echo -e "${GREEN}$COIN_NAME Masternode is up and running listening on port${NC} ${PURPLE}$COIN_PORT${NC}."
- echo -e "${GREEN}Configuration file is:${NC}${RED}$CONFIGFOLDER/$CONFIG_FILE${NC}"
- echo -e "${GREEN}Start:${NC}${RED}systemctl start $COIN_NAME.service${NC}"
- echo -e "${GREEN}Stop:${NC}${RED}systemctl stop $COIN_NAME.service${NC}"
- echo -e "${GREEN}VPS_IP:${NC}${GREEN}$NODEIP:$COIN_PORT${NC}"
- echo -e "${GREEN}Usage Commands.${NC}"
- echo -e "${GREEN}$COIN_CLI getmasternodestatus${NC}"
- echo -e "${GREEN}$COIN_CLI getinfo${NC}"
+ echo -e "$PROJECT_NAME Masternode is up and running listening on port ${GREEN}$COIN_PORT${NC}."
+ echo -e "Configuration file is: ${RED}$CONFIGFOLDER/$CONFIG_FILE${NC}"
+ echo -e "Start: ${RED}systemctl start $COIN_NAME.service${NC}"
+ echo -e "Stop: ${RED}systemctl stop $COIN_NAME.service${NC}"
+ echo -e "Check Status: ${RED}systemctl status $COIN_NAME.service${NC}"
+ echo -e "VPS_IP:PORT ${GREEN}$NODEIP:$COIN_PORT${NC}"
+ echo -e "MASTERNODE PRIVATE KEY is: ${RED}$COINKEY${NC}"
+ echo -e "Check ${RED}$COIN_CLI getblockcount${NC} and compare to ${GREEN}$COIN_EXPLORER${NC}."
+ echo -e "Check ${GREEN}Collateral${NC} already full confirmed and start masternode."
+ echo -e "Use ${RED}$COIN_CLI getmasternodestatus${NC} to check your MN Status."
+ echo -e "Use ${RED}$COIN_CLI mnsync status${NC} to see if the node is synced with the network."
+ echo -e "Use ${RED}$COIN_CLI help${NC} for help."
+ echo -e "You can also use ${RED}mnbtc-cli getinfo${NC}, ${RED}mnbtc-cli getnetworkinfo${NC}, ${RED}mnbtc-cli getconnectioncount${NC}commands for a nice looking infos.${NC}"
  echo -e "${BLUE}================================================================================================================================${NC}"
- 
- }
+# if [[ -n $SENTINEL_REPO  ]]; then
+#  echo -e "${RED}Sentinel${NC} is installed in ${RED}/root/sentinel_$COIN_NAME${NC}"
+#  echo -e "Sentinel logs is: ${RED}$CONFIGFOLDER/sentinel.log${NC}"
+#  fi
+}
 
 function setup_node() {
   get_ip
@@ -268,14 +458,13 @@ function setup_node() {
   create_key
   update_config
   enable_firewall
+  #install_sentinel
   important_information
   configure_systemd
-  #if we made it this far, then it was successful. Remove this script
-  rm -- "$0" > /dev/null 2>&1
 }
 
 
-##### Main #####
+${LICON}${LICON}${LICON}## Main ${LICON}${LICON}${LICON}##
 clear
 
 purgeOldInstallation
@@ -283,3 +472,18 @@ checks
 prepare_system
 download_node
 setup_node
+set_scripts_and_aliases
+Footer
+Â© 2023 GitHub, Inc.
+Footer navigation
+Terms
+Privacy
+Security
+Status
+Docs
+Contact GitHub
+Pricing
+API
+Training
+Blog
+About
