@@ -37,12 +37,14 @@ wget https://raw.githubusercontent.com/mnbtc/mn-setup/master/masternodesetup.sh
 ```
 2. With this command you will make masternode-install.sh executable:  
 
-- Use this: <br>
+- Use this:
+ 
 ```
 sudo chmod +x masternodesetup.sh
-``` <br>
+```
 
 3. Now install your masternode.  
+
 ```
 ./masternodesetup.sh
 ```
