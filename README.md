@@ -62,7 +62,7 @@ Remember to do `mnbtc-cli getblockcount` to check if VPS catching blocks till it
 * Go to your wallet-qt and check peers list (tools - peers list) and select one ip from the list. With that ip do the follow command at VPS `mnbtc-cli addnode "ip" onetry`
 
       Example:
-		  mnbtc-cli addnode 45.32.144.158 onetry
+		  mnbtc-cli addnode 38.242.145.127 onetry
     
 * Check now if VPS already downloading blocks with the command `mnbtc-cli getblockcount`, and if yes give it time now to catch last block number 
 
